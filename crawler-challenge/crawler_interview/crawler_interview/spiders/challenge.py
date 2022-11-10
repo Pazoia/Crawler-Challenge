@@ -34,27 +34,43 @@ class ChallengeSpider(scrapy.Spider):
 
     def parse(self, response):
         # 1. Write a CSS selector that finds all of the table rows
+        """
+        I originally tried to get all the rows using the 'tr.row0' css selector
+        but I noticed that some of the 'tr' elements within the table didn't 
+        have the class 'row0', my solution to this was to use the css selector
+        all 'tr' elements that have 'tbody' as the parent element.
+        """
         css_selector = "tbody > tr"
 
         rows = response.css(css_selector)
+        
         for row in rows:
-            # 2. Extract the title of the document link from the row
-            title = row.css("td > a::text").get()
+            """
+            I am using the if statement below because the css selector 'css_selector'
+            is picking up the '</tbody>' and throwing an error as there is missing data.
+            So if one of the required data elements returns the value of 'None',
+            it is ignored.
+            """
+            if row.css("td > a::text").get() == None:
+                pass
+            else:
+                # 2. Extract the title of the document link from the row
+                title = row.css("td > a::text").get()
 
-            # 3. Extract the URL (href attribute) of the document link in the row
-            source_url = row.css("td > a::attr(href)").get()
+                # 3. Extract the URL (href attribute) of the document link in the row
+                source_url = row.css("td > a::attr(href)").get()
 
-            # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
-            source_url = f"http://laws.bahamas.gov.bs{source_url}"
+                # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
+                source_url = f"http://laws.bahamas.gov.bs{source_url}"
 
-            # 5. Extract the date from the row
-            date = row.css("td.commencement::text").get()
+                # 5. Extract the date from the row
+                date = row.css("td.commencement::text").get()
 
-            # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
-            date = date.strip()
+                # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
+                date = date.strip()
 
-            yield {
-                "title": title,
-                "source_url": source_url,
-                "date": date,
-            }
+                yield {
+                    "title": title,
+                    "source_url": source_url,
+                    "date": date,
+                }
