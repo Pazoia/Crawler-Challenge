@@ -60,7 +60,7 @@ class ChallengeSpider(scrapy.Spider):
                 source_url = row.css("td > a::attr(href)").get()
 
                 # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
-                source_url = f"http://laws.bahamas.gov.bs{source_url}"
+                full_source_url = f"http://laws.bahamas.gov.bs{source_url}"
 
                 # 5. Extract the date from the row
                 date = row.css("td.commencement::text").get()
@@ -70,6 +70,6 @@ class ChallengeSpider(scrapy.Spider):
 
                 yield {
                     "title": title,
-                    "source_url": source_url,
+                    "source_url": full_source_url,
                     "date": date,
                 }
