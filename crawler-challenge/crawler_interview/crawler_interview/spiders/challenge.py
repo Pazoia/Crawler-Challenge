@@ -46,17 +46,16 @@ class ChallengeSpider(scrapy.Spider):
         
         for row in rows:
             """
-            I am using the if statement below because the css selector 'css_selector'
-            is picking up the '</tbody>' and throwing an error as there is missing data.
+            I am checking below if the `title` data query returns a `truthy` value below
+            because the css selector 'css_selector' is picking up the '</tbody>' closing tag,
+            and throwing an error as there is missing data.
             So if one of the required data elements returns the value of 'None',
             it is ignored.
             """
-            if row.css("td > a::text").get() == None:
-                pass
-            else:
-                # 2. Extract the title of the document link from the row
-                title = row.css("td > a::text").get()
+            # 2. Extract the title of the document link from the row
+            title = row.css("td > a::text").get()
 
+            if title:
                 # 3. Extract the URL (href attribute) of the document link in the row
                 source_url = row.css("td > a::attr(href)").get()
 
