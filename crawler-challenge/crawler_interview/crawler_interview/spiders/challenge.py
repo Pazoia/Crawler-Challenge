@@ -34,24 +34,24 @@ class ChallengeSpider(scrapy.Spider):
 
     def parse(self, response):
         # 1. Write a CSS selector that finds all of the table rows
-        css_selector = "<ENTER YOUR CSS SELECTOR HERE>"
+        css_selector = "tbody > tr"
 
         rows = response.css(css_selector)
         for row in rows:
             # 2. Extract the title of the document link from the row
-            title = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+            title = row.css("td > a::text").get()
 
             # 3. Extract the URL (href attribute) of the document link in the row
-            source_url = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+            source_url = row.css("td > a::attr(href)").get()
 
             # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
-            # <ENTER YOUR CODE HERE>
+            source_url = f"http://laws.bahamas.gov.bs{source_url}"
 
             # 5. Extract the date from the row
-            date = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+            date = row.css("td.commencement::text").get()
 
             # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
-            # <ENTER YOUR CODE HERE>
+            date = date.strip()
 
             yield {
                 "title": title,
