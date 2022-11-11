@@ -27,3 +27,8 @@ Extracting all acts starting with the letter `A`
 ```
 git checkout parse-function-with-css-selectors
 ```
+
+✅ ↦ Create a branch to hold the code with the changes on the parse method using css_selectors  
+Extracting all acts starting with the letter `A` to `Z`
+
+Merged this branch to main as it was the most advanced, having completed both challenges.

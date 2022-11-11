@@ -1,5 +1,5 @@
 import scrapy
-
+from crawler_helpers.sanitise import sanitise_str
 
 class ChallengeSpider(scrapy.Spider):
     name = "challenge"
@@ -32,29 +32,64 @@ class ChallengeSpider(scrapy.Spider):
     *** Please do not spend more than 1 hour in total on the task.***
     """
 
-    def parse(self, response):
-        # 1. Write a CSS selector that finds all of the table rows
-        css_selector = "<ENTER YOUR CSS SELECTOR HERE>"
+    def parse(self, response):        
+        inputs_css_selector = response.css("div#alphabet")
 
-        rows = response.css(css_selector)
-        for row in rows:
-            # 2. Extract the title of the document link from the row
-            title = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+        letters_css_selector = inputs_css_selector.css('input::attr(value)').getall()
+        letters_css_selector.pop(-1)
+        
+        for letter in letters_css_selector:
+            # Extract letter 'A'
+            first_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={letter}" 
+            yield response.follow(first_letter_url, self.extract_data)
 
-            # 3. Extract the URL (href attribute) of the document link in the row
-            source_url = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+            if letter == "Z":
+                last_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={letter}"
+                yield response.follow(last_letter_url, self.extract_data)
+            else:
+                current_letter_index = letters_css_selector.index(letter)
+                next_letter = letters_css_selector[current_letter_index + 1]
+                next_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={next_letter}"
+                yield response.follow(next_letter_url, self.extract_data)
 
-            # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
-            # <ENTER YOUR CODE HERE>
+    def extract_data(self, response):
+            # 1. Write a CSS selector that finds all of the table rows
+            """
+            I originally tried to get all the rows using the 'tr.row0' css selector
+            but I noticed that some of the 'tr' elements within the table didn't 
+            have the class 'row0', my solution to this was to use the css selector
+            all 'tr' elements that have 'tbody' as the parent element.
+            """
+            css_selector = "tbody > tr"
 
-            # 5. Extract the date from the row
-            date = row.css("<ENTER YOUR CSS SELECTOR HERE>").get()
+            rows = response.css(css_selector)
 
-            # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
-            # <ENTER YOUR CODE HERE>
+            for row in rows:
+                """
+                I am checking below if the `title` data query returns a `truthy` value below
+                because the css selector 'css_selector' is picking up the '</tbody>' closing tag,
+                and throwing an error as there is missing data.
+                So if one of the required data elements returns the value of 'None',
+                it is ignored.
+                """
+                # 2. Extract the title of the document link from the row
+                title = row.css("td > a::text").get()
 
-            yield {
-                "title": title,
-                "source_url": source_url,
-                "date": date,
-            }
+                if title:
+                    # 3. Extract the URL (href attribute) of the document link in the row
+                    source_url = row.css("td > a::attr(href)").get()
+
+                    # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
+                    full_source_url = f"http://laws.bahamas.gov.bs{source_url}"
+
+                    # 5. Extract the date from the row
+                    date = row.css("td.commencement::text").get()
+
+                    # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
+                    date = date.strip()
+
+                    yield {
+                        "title": sanitise_str(title),
+                        "source_url": full_source_url,
+                        "date": date,
+                    }         
