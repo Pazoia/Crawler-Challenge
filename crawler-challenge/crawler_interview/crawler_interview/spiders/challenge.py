@@ -1,5 +1,5 @@
 import scrapy
-from crawler_helpers.sanitise import sanitise_str
+from crawler_interview.crawler_helpers.sanitise import sanitise_str
 
 class ChallengeSpider(scrapy.Spider):
     name = "challenge"
