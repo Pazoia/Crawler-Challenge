@@ -1,5 +1,6 @@
 import scrapy
-
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 class ChallengeSpider(scrapy.Spider):
     name = "challenge"
@@ -33,43 +34,61 @@ class ChallengeSpider(scrapy.Spider):
     """
 
     def parse(self, response):
-        # 1. Write a CSS selector that finds all of the table rows
-        """
-        I originally tried to get all the rows using the 'tr.row0' css selector
-        but I noticed that some of the 'tr' elements within the table didn't 
-        have the class 'row0', my solution to this was to use the css selector
-        all 'tr' elements that have 'tbody' as the parent element.
-        """
-        css_selector = "tbody > tr"
-
-        rows = response.css(css_selector)
+        driver = webdriver.Chrome()
+        driver.get("http://laws.bahamas.gov.bs/cms/en/legislation/acts.html")
         
-        for row in rows:
-            """
-            I am checking below if the `title` data query returns a `truthy` value below
-            because the css selector 'css_selector' is picking up the '</tbody>' closing tag,
-            and throwing an error as there is missing data.
-            So if one of the required data elements returns the value of 'None',
-            it is ignored.
-            """
-            # 2. Extract the title of the document link from the row
-            title = row.css("td > a::text").get()
+        inputs_css_selector = "div > input"
 
-            if title:
-                # 3. Extract the URL (href attribute) of the document link in the row
-                source_url = row.css("td > a::attr(href)").get()
+        inputs_list = response.css(inputs_css_selector)
 
-                # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
-                full_source_url = f"http://laws.bahamas.gov.bs{source_url}"
+        for input in inputs_list:
+            value = input.css('::attr(value)').get()
+            if value is None or len(value) > 1:
+                pass
+            else:
+                print(" ------------------ ")
+                print(f"VALUE: {value}")
+                print(f"URL: {response.url}")
+                print(" ------------------ ")
+                driver.find_element(By.CSS_SELECTOR, f'input[value="{value}"]').click()
+                
+                # 1. Write a CSS selector that finds all of the table rows
+                """
+                I originally tried to get all the rows using the 'tr.row0' css selector
+                but I noticed that some of the 'tr' elements within the table didn't 
+                have the class 'row0', my solution to this was to use the css selector
+                all 'tr' elements that have 'tbody' as the parent element.
+                """
+                css_selector = "tbody > tr"
 
-                # 5. Extract the date from the row
-                date = row.css("td.commencement::text").get()
+                rows = response.css(css_selector)
 
-                # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
-                date = date.strip()
+                for row in rows:
+                    """
+                    I am checking below if the `title` data query returns a `truthy` value below
+                    because the css selector 'css_selector' is picking up the '</tbody>' closing tag,
+                    and throwing an error as there is missing data.
+                    So if one of the required data elements returns the value of 'None',
+                    it is ignored.
+                    """
+                    # 2. Extract the title of the document link from the row
+                    title = row.css("td > a::text").get()
 
-                yield {
-                    "title": title,
-                    "source_url": full_source_url,
-                    "date": date,
-                }
+                    if title:
+                        # 3. Extract the URL (href attribute) of the document link in the row
+                        source_url = row.css("td > a::attr(href)").get()
+
+                        # 4. Ensure that the source_url is complete, i.e starts with "http://laws.bahamas.gov.bs"
+                        full_source_url = f"http://laws.bahamas.gov.bs{source_url}"
+
+                        # 5. Extract the date from the row
+                        date = row.css("td.commencement::text").get()
+
+                        # 6. Clean up the date text by stripping any blank spaces that appear before and after it.
+                        date = date.strip()
+
+                        yield {
+                            "title": title,
+                            "source_url": full_source_url,
+                            "date": date,
+                        }
