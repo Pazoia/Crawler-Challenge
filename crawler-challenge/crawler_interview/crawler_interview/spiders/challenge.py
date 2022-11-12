@@ -1,5 +1,6 @@
 import scrapy
-from crawler_interview.crawler_helpers.sanitise import sanitise_str
+from crawler_interview.crawler_helpers.sanitisation import sanitise_title
+
 
 class ChallengeSpider(scrapy.Spider):
     name = "challenge"
@@ -89,7 +90,7 @@ class ChallengeSpider(scrapy.Spider):
                     date = date.strip()
 
                     yield {
-                        "title": sanitise_str(title),
+                        "title": sanitise_title(title),
                         "source_url": full_source_url,
                         "date": date,
                     }         
