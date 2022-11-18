@@ -39,18 +39,8 @@ class ChallengeSpider(scrapy.Spider):
         letters_css_selector.pop(-1)
         
         for letter in letters_css_selector:
-            # Extract letter 'A'
-            first_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={letter}" 
-            yield response.follow(first_letter_url, self.extract_data)
-
-            if letter == "Z":
-                last_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={letter}"
-                yield response.follow(last_letter_url, self.extract_data)
-            else:
-                current_letter_index = letters_css_selector.index(letter)
-                next_letter = letters_css_selector[current_letter_index + 1]
-                next_letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={next_letter}"
-                yield response.follow(next_letter_url, self.extract_data)
+            letter_url = f"https://laws.bahamas.gov.bs/cms/en/legislation/acts.html?view=acts_only&submit4={letter}" 
+            yield response.follow(letter_url, self.extract_data)
 
     def extract_data(self, response):
             # 1. Write a CSS selector that finds all of the table rows
